@@ -7,7 +7,7 @@
 
 import UIKit
 
-class STButton: UIButton {
+class CustomButton: UIButton {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configure()
@@ -25,7 +25,7 @@ class STButton: UIButton {
     
     func configure() {
         layer.cornerRadius = 15
-        titleLabel?.font = .systemFont(ofSize: 14)
+        titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
         backgroundColor = UIColor(named: "buttonColorDis")
         setTitleColor(UIColor(named: "buttonColor"), for: .normal)
         setTitleColor(.white, for: .selected)

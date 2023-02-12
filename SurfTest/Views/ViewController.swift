@@ -9,36 +9,31 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    let backgroundImgView   = UIImageView()
-    let mainScrollView      = UIScrollView()
-    let firstScrollView     = UIScrollView()
-    let secondScrollView    = UIScrollView()
-    let mainVStack          = UIStackView()
-    let firstHStack         = UIStackView()
-    let secondHStack        = UIStackView()
-    let bottomHStack        = UIStackView()
-    let firstIOSButton      = STButton(title: "IOS")
-    let firstAndroidButton  = STButton(title: "Android")
-    let firstDesignButton   = STButton(title: "Design")
-    let firstFlutterButton  = STButton(title: "Flutter")
-    let firstQAButton       = STButton(title: "QA")
-    let firstPMButton       = STButton(title: "PM")
-    let secondIOSButton     = STButton(title: "IOS")
-    let secondAndroidButton = STButton(title: "Android")
-    let secondDesignButton  = STButton(title: "Design")
-    let secondFlutterButton = STButton(title: "Flutter")
-    let secondQAButton      = STButton(title: "QA")
-    let secondPMButton      = STButton(title: "PM")
+    let presenter         = Presenter()
+    let collection        = CustomCollection(frame: .zero, collectionViewLayout: UICollectionViewLayout())
+    let backgroundImgView = UIImageView()
+    let mainScrollView    = UIScrollView()
+    let mainVStack        = UIStackView()
+    let bottomHStack      = UIStackView()
+    let iOSButton         = CustomButton(title: "IOS")
+    let androidButton     = CustomButton(title: "Android")
+    let designButton      = CustomButton(title: "Design")
+    let flutterButton     = CustomButton(title: "Flutter")
+    let QAButton          = CustomButton(title: "QA")
+    let PMButton          = CustomButton(title: "PM")
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .black
+        view.backgroundColor = .white
+        collection.delegate = self
+        collection.dataSource = self
         configBackground()
         configScrollView()
         configMainVStack()
-        configBottomStack()
+        //configBottomStack()
         configBottomItems()
         configRectangle()
+        configButtons()
     }
     
     let titleLabel: UILabel = {
@@ -98,6 +93,13 @@ class ViewController: UIViewController {
         return rectangle
     }()
     
+    let bottomView: UIView = {
+        let bottom = UIView()
+        bottom.backgroundColor = .white
+        bottom.translatesAutoresizingMaskIntoConstraints = false
+        return bottom
+    }()
+    
     private func configBackground() {
         view.addSubview(backgroundImgView)
         backgroundImgView.image = UIImage(named: "fon1")
@@ -110,24 +112,24 @@ class ViewController: UIViewController {
         ])
     }
     
-    private func configBottomStack() {
-        view.addSubview(bottomHStack)
-        bottomHStack.spacing = 24
-        bottomHStack.axis = .horizontal
-        bottomHStack.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            bottomHStack.bottomAnchor.constraint(equalTo: mainScrollView.bottomAnchor, constant: -50),
-            bottomHStack.leadingAnchor.constraint(equalTo: mainScrollView.leadingAnchor, constant: 20),
-            bottomHStack.trailingAnchor.constraint(equalTo: mainScrollView.trailingAnchor, constant: -20)
-        ])
-    }
-    
     private func configBottomItems() {
-        bottomHStack.addArrangedSubview(questionLabel)
-        bottomHStack.addArrangedSubview(sendButton)
+        view.addSubview(bottomView)
+        bottomView.addSubview(questionLabel)
+        bottomView.addSubview(sendButton)
+        sendButton.addTarget(self, action: #selector(sendButtonTapped), for: .touchUpInside)
         NSLayoutConstraint.activate([
+            bottomView.bottomAnchor.constraint(equalTo: mainScrollView.bottomAnchor),
+            bottomView.leadingAnchor.constraint(equalTo: mainScrollView.leadingAnchor),
+            bottomView.trailingAnchor.constraint(equalTo: mainScrollView.trailingAnchor),
+            bottomView.heightAnchor.constraint(equalToConstant: 118),
+            
             sendButton.widthAnchor.constraint(equalToConstant: view.bounds.width * 0.58),
-            sendButton.heightAnchor.constraint(equalToConstant: 60)
+            sendButton.heightAnchor.constraint(equalToConstant: 60),
+            sendButton.bottomAnchor.constraint(equalTo: bottomView.bottomAnchor, constant: -58),
+            sendButton.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor, constant: -20),
+            
+            questionLabel.leadingAnchor.constraint(equalTo: bottomView.leadingAnchor, constant: 20),
+            questionLabel.centerYAnchor.constraint(equalTo: sendButton.centerYAnchor)
         ])
     }
     
@@ -162,10 +164,8 @@ class ViewController: UIViewController {
     private func configRectangle() {
         roundedRectangle.addSubview(titleLabel)
         roundedRectangle.addSubview(firstDescLabel)
-        roundedRectangle.addSubview(firstIOSButton)
+        roundedRectangle.addSubview(collection)
         roundedRectangle.addSubview(secondDescLabel)
-        roundedRectangle.addSubview(secondAndroidButton)
-        roundedRectangle.addSubview(secondPMButton)
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: roundedRectangle.topAnchor, constant: 24),
             titleLabel.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20),
@@ -174,19 +174,130 @@ class ViewController: UIViewController {
             firstDescLabel.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20),
             firstDescLabel.trailingAnchor.constraint(equalTo: roundedRectangle.trailingAnchor, constant: -20),
             
-            firstIOSButton.topAnchor.constraint(equalTo: firstDescLabel.bottomAnchor, constant: 12),
-            firstIOSButton.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20),
+            collection.topAnchor.constraint(equalTo: firstDescLabel.bottomAnchor),
+            collection.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor),
+            collection.trailingAnchor.constraint(equalTo: roundedRectangle.trailingAnchor),
+            collection.heightAnchor.constraint(equalToConstant: 68),
             
-            secondDescLabel.topAnchor.constraint(equalTo: firstIOSButton.bottomAnchor, constant: 24),
+            secondDescLabel.topAnchor.constraint(equalTo: collection.bottomAnchor, constant: 20),
             secondDescLabel.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20),
             secondDescLabel.trailingAnchor.constraint(equalTo: roundedRectangle.trailingAnchor, constant: -20),
-            
-            secondAndroidButton.topAnchor.constraint(equalTo: secondDescLabel.bottomAnchor, constant: 12),
-            secondAndroidButton.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20),
-            
-            secondPMButton.topAnchor.constraint(equalTo: secondAndroidButton.bottomAnchor, constant: 12),
-            secondPMButton.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20)
         ])
     }
+    
+    private func configButtons() {
+        roundedRectangle.addSubview(iOSButton)
+        roundedRectangle.addSubview(androidButton)
+        roundedRectangle.addSubview(designButton)
+        roundedRectangle.addSubview(flutterButton)
+        roundedRectangle.addSubview(QAButton)
+        roundedRectangle.addSubview(PMButton)
+        iOSButton.addTarget(self, action: #selector(iOSButtonTapped), for: .touchUpInside)
+        androidButton.addTarget(self, action: #selector(androidButtonTapped), for: .touchUpInside)
+        designButton.addTarget(self, action: #selector(designButtonTapped), for: .touchUpInside)
+        flutterButton.addTarget(self, action: #selector(flutterButtonTapped), for: .touchUpInside)
+        QAButton.addTarget(self, action: #selector(QAButtonTapped), for: .touchUpInside)
+        PMButton.addTarget(self, action: #selector(PMButtonTapped), for: .touchUpInside)
+        NSLayoutConstraint.activate([
+            iOSButton.topAnchor.constraint(equalTo: secondDescLabel.bottomAnchor, constant: 12),
+            iOSButton.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20),
+            iOSButton.widthAnchor.constraint(equalToConstant: 71),
+            iOSButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            androidButton.topAnchor.constraint(equalTo: secondDescLabel.bottomAnchor, constant: 12),
+            androidButton.leadingAnchor.constraint(equalTo: iOSButton.trailingAnchor, constant: 12),
+            androidButton.widthAnchor.constraint(equalToConstant: 96),
+            androidButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            designButton.topAnchor.constraint(equalTo: secondDescLabel.bottomAnchor, constant: 12),
+            designButton.leadingAnchor.constraint(equalTo: androidButton.trailingAnchor, constant: 12),
+            designButton.widthAnchor.constraint(equalToConstant: 91),
+            designButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            flutterButton.topAnchor.constraint(equalTo: androidButton.bottomAnchor, constant: 12),
+            flutterButton.leadingAnchor.constraint(equalTo: QAButton.trailingAnchor, constant: 12),
+            flutterButton.widthAnchor.constraint(equalToConstant: 87),
+            flutterButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            QAButton.topAnchor.constraint(equalTo: iOSButton.bottomAnchor, constant: 12),
+            QAButton.leadingAnchor.constraint(equalTo: roundedRectangle.leadingAnchor, constant: 20),
+            QAButton.widthAnchor.constraint(equalToConstant: 68),
+            QAButton.heightAnchor.constraint(equalToConstant: 44),
+            
+            PMButton.topAnchor.constraint(equalTo: designButton.bottomAnchor, constant: 12),
+            PMButton.leadingAnchor.constraint(equalTo: flutterButton.trailingAnchor, constant: 12),
+            PMButton.widthAnchor.constraint(equalToConstant: 69),
+            PMButton.heightAnchor.constraint(equalToConstant: 44),
+        ])
+    }
+    
+    @objc func iOSButtonTapped() {
+        presenter.tappedButton(index: 0, sender: self)
+    }
+    
+    @objc func androidButtonTapped() {
+        presenter.tappedButton(index: 1, sender: self)
+    }
+    
+    @objc func designButtonTapped() {
+        presenter.tappedButton(index: 2, sender: self)
+    }
+    
+    @objc func flutterButtonTapped() {
+        presenter.tappedButton(index: 3, sender: self)
+    }
+    
+    @objc func QAButtonTapped() {
+        presenter.tappedButton(index: 5, sender: self)
+    }
+    
+    @objc func PMButtonTapped() {
+        presenter.tappedButton(index: 4, sender: self)
+    }
+    
+    @objc func sendButtonTapped() {
+        presenter.showAlert(sender: self, title: "Поздравляем!", message: "Ваша заявка успешно отправлена!")
+    }
+}
 
+extension ViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        return 1
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return presenter.fetchData().count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
+        return CGSize(width: 20, height: 0)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForFooterInSection section: Int) -> CGSize {
+        return CGSize(width: 20, height: 0)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return CGFloat(12)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! CustomCell
+        cell.label.text = presenter.fetchData()[indexPath.row].name
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(
+            width: presenter.fetchData()[indexPath.row].width,
+            height: 44
+        )
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let cell = collectionView.cellForItem(at: indexPath) as! CustomCell
+        presenter.tappedButton(index: indexPath.row, sender: self)
+        presenter.selectedItem(cell: cell)
+    }
 }
